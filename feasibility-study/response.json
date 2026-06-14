@@ -1,0 +1,149 @@
+{
+  "data": {
+    "stop": {
+      "name": "Särkänniemi B",
+      "stoptimesWithoutPatterns": [
+        {
+          "scheduledDeparture": 41520,
+          "realtimeDeparture": 41600,
+          "realtime": true,
+          "serviceDay": 1781384400,
+          "headsign": "TAYS",
+          "trip": {
+            "route": {
+              "shortName": "1",
+              "longName": "Kaupin kampus - Keskustori - Lentävänniemi",
+              "mode": "TRAM"
+            }
+          }
+        },
+        {
+          "scheduledDeparture": 41940,
+          "realtimeDeparture": 42015,
+          "realtime": true,
+          "serviceDay": 1781384400,
+          "headsign": "TAYS",
+          "trip": {
+            "route": {
+              "shortName": "1",
+              "longName": "Kaupin kampus - Keskustori - Lentävänniemi",
+              "mode": "TRAM"
+            }
+          }
+        },
+        {
+          "scheduledDeparture": 42420,
+          "realtimeDeparture": 42470,
+          "realtime": true,
+          "serviceDay": 1781384400,
+          "headsign": "TAYS",
+          "trip": {
+            "route": {
+              "shortName": "1",
+              "longName": "Kaupin kampus - Keskustori - Lentävänniemi",
+              "mode": "TRAM"
+            }
+          }
+        },
+        {
+          "scheduledDeparture": 42840,
+          "realtimeDeparture": 42890,
+          "realtime": true,
+          "serviceDay": 1781384400,
+          "headsign": "TAYS",
+          "trip": {
+            "route": {
+              "shortName": "1",
+              "longName": "Kaupin kampus - Keskustori - Lentävänniemi",
+              "mode": "TRAM"
+            }
+          }
+        },
+        {
+          "scheduledDeparture": 43320,
+          "realtimeDeparture": 43368,
+          "realtime": true,
+          "serviceDay": 1781384400,
+          "headsign": "TAYS",
+          "trip": {
+            "route": {
+              "shortName": "1",
+              "longName": "Kaupin kampus - Keskustori - Lentävänniemi",
+              "mode": "TRAM"
+            }
+          }
+        },
+        {
+          "scheduledDeparture": 43740,
+          "realtimeDeparture": 43786,
+          "realtime": true,
+          "serviceDay": 1781384400,
+          "headsign": "TAYS",
+          "trip": {
+            "route": {
+              "shortName": "1",
+              "longName": "Kaupin kampus - Keskustori - Lentävänniemi",
+              "mode": "TRAM"
+            }
+          }
+        },
+        {
+          "scheduledDeparture": 44220,
+          "realtimeDeparture": 44264,
+          "realtime": true,
+          "serviceDay": 1781384400,
+          "headsign": "TAYS",
+          "trip": {
+            "route": {
+              "shortName": "1",
+              "longName": "Kaupin kampus - Keskustori - Lentävänniemi",
+              "mode": "TRAM"
+            }
+          }
+        },
+        {
+          "scheduledDeparture": 44640,
+          "realtimeDeparture": 44640,
+          "realtime": false,
+          "serviceDay": 1781384400,
+          "headsign": "TAYS",
+          "trip": {
+            "route": {
+              "shortName": "1",
+              "longName": "Kaupin kampus - Keskustori - Lentävänniemi",
+              "mode": "TRAM"
+            }
+          }
+        },
+        {
+          "scheduledDeparture": 45120,
+          "realtimeDeparture": 45120,
+          "realtime": false,
+          "serviceDay": 1781384400,
+          "headsign": "TAYS",
+          "trip": {
+            "route": {
+              "shortName": "1",
+              "longName": "Kaupin kampus - Keskustori - Lentävänniemi",
+              "mode": "TRAM"
+            }
+          }
+        },
+        {
+          "scheduledDeparture": 45540,
+          "realtimeDeparture": 45540,
+          "realtime": false,
+          "serviceDay": 1781384400,
+          "headsign": "TAYS",
+          "trip": {
+            "route": {
+              "shortName": "1",
+              "longName": "Kaupin kampus - Keskustori - Lentävänniemi",
+              "mode": "TRAM"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
