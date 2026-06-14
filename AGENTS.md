@@ -1,25 +1,60 @@
 # Pysäkkivahti — Agent Notes
 
-## Project Status
+## Dev Workflow
 
-Early-stage MVP. Only a feasibility study and plan exist — no application code yet. See `plan.md` for the full design.
+Two concurrent processes are required; neither works alone:
 
-## Tech Stack (planned)
+1. `npm run server` — Express on port 3000 (or `PORT` env var)
+2. `npm run dev` — Vite on port 5173, proxies `/api` → `localhost:3000`
 
-- **Server**: Node.js + TypeScript + Express, run via `tsx` (no compile step in dev)
-- **Frontend**: Vite + TypeScript, vanilla HTML/CSS/JS (no framework)
-- **API**: Digitransit Routing API (Waltti region), proxied through Express to avoid CORS
-- **Config**: `config.json` on server, `.env` for API key
+Production: `npx vite build` then `NODE_ENV=production npm run server`.
 
-## Environment
+## Commands
 
-- `PYSAKKIVAHTI_API_KEY` (or `.env` variable) — required for Digitransit API, set as `digitransit-subscription-key` header
-- API endpoint: `https://api.digitransit.fi/routing/v2/waltti/gtfs/v1` (GraphQL)
+- `npm test` — vitest run (happy-dom environment, globals enabled)
+- `npm run typecheck` — `tsc --noEmit` (no compile step; server runs via tsx)
+- `npm run lint` — eslint with type-aware rules (`projectService: true`)
 
-## Key Architecture Decisions
+## ESM + ts Extensions
 
-- Frontend does not call Digitransit directly — all API calls go through the Express server proxy
-- Direction filtering by headsign substring match (not fuzzy), done server-side
-- Geolocation with manual fallback; HTTPS required for browser geolocation
-- City Centre location has time-based routing (`beforeHour`/`afterHour`) instead of a single destination
-- `feasibility-study/` is reference material, not part of the app
+`"type": "module"` + `allowImportingTsExtensions: true` in tsconfig. All local imports must include the `.ts` extension:
+
+```ts
+import { App } from './app.ts';       // correct
+import { App } from './app';          // will fail
+```
+
+`tsconfig.json` uses `moduleResolution: "bundler"` — resolves like a bundler, not Node.
+
+## Express 5
+
+Dependency is `express@^5`, not Express 4. Some APIs differ (e.g., async middleware error handling, `res.json()` edge cases).
+
+## Architecture
+
+- **Server** (`server.ts`): Express, run via `tsx`. Exports `app` and `startServer` for testability.
+- **Frontend** (`src/`): Vanilla TS, no framework. Vite entry is `index.html` → `src/main.ts`.
+- **Proxy pattern**: Frontend never calls Digitransit directly — all `/api` calls go through Express.
+- **Current data**: Hardcoded mock data in `server.ts`. `config.json` and real Digitransit integration are future stories.
+- **Types** (`src/types.ts`): Shared between server and frontend. Imported by `server.ts` from `./src/types.ts`.
+
+## Testing
+
+- Server tests import `app` directly and use `app.listen(0)` on ephemeral ports — no HTTP mocking library.
+- Frontend tests mock `globalThis.fetch` manually with `vi.fn()` — no MSW or similar.
+- Test file reads `src/style.css` via `readFileSync` for CSS rule assertions.
+- Unused vars/args prefixed with `_` are allowed by ESLint (`argsIgnorePattern`, `varsIgnorePattern`).
+
+## Finnish UI
+
+All user-facing strings are in Finnish (e.g., "Ladataan...", "Ei lähtöjä", error messages). Not i18n — just hardcoded. Keep new UI text in Finnish.
+
+## Not Part of the App
+
+- `feasibility-study/` — reference material only, not imported or built.
+- `plan.md` — original design doc; partially implemented. Geolocation, real API, time-based routing, and `config.json` are future stories.
+- `PYSAKKIVAHTI_API_KEY` env var — defined in `.env.example` but not yet consumed by any code.
+
+## Vitest Config
+
+Vitest settings live inside `vite.config.ts` (not a separate `vitest.config.ts`): `environment: "happy-dom"`, `globals: true`.
