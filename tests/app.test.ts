@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync, statSync } from 'fs';
 import { resolve } from 'path';
 
 vi.mock('../src/geolocation.ts', () => ({
@@ -621,6 +621,34 @@ describe('index.html', () => {
   it('includes viewport meta tag', () => {
     const htmlText = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8');
     expect(htmlText).toMatch(/<meta[^>]*name="viewport"[^>]*content="width=device-width, initial-scale=1"[^>]*>/);
+  });
+
+  it('includes favicon link with correct attributes', () => {
+    const htmlText = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8');
+    expect(htmlText).toMatch(/<link[^>]*rel="icon"[^>]*href="\/favicon\.svg"[^>]*type="image\/svg\+xml"[^>]*>/);
+  });
+
+  it('favicon link appears before the title element', () => {
+    const htmlText = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8');
+    const faviconPos = htmlText.indexOf('/favicon.svg');
+    const titlePos = htmlText.indexOf('<title>');
+    expect(faviconPos).toBeGreaterThan(-1);
+    expect(titlePos).toBeGreaterThan(-1);
+    expect(faviconPos).toBeLessThan(titlePos);
+  });
+});
+
+describe('favicon.svg', () => {
+  it('exists in public/ directory with non-zero size', () => {
+    const faviconPath = resolve(process.cwd(), 'public/favicon.svg');
+    expect(existsSync(faviconPath)).toBe(true);
+    const stats = statSync(faviconPath);
+    expect(stats.size).toBeGreaterThan(0);
+  });
+
+  it('no longer exists at project root', () => {
+    const rootFaviconPath = resolve(process.cwd(), 'favicon.svg');
+    expect(existsSync(rootFaviconPath)).toBe(false);
   });
 });
 
