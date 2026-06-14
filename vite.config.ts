@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   server: {
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api': `http://localhost:${process.env.PORT ?? 3000}`,
     },
   },
   test: {
