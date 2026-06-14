@@ -1,0 +1,13 @@
+.env
+.git
+.gitignore
+.gitattributes
+node_modules
+dist
+dist-server
+feasibility-study
+docs
+stories
+.opencode
+tests
+*.md

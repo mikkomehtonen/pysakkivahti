@@ -126,6 +126,26 @@ PYSAKKIVAHTI_API_KEY=your-key-here
 
 The departures endpoint returns 503 if the API key is missing.
 
+## Docker
+
+Build the Docker image:
+
+```bash
+docker build -t pysakkivahti .
+```
+
+Run the container with your Digitransit API key:
+
+```bash
+docker run -d --name pysakkivahti -p 3000:3000 -e PYSAKKIVAHTI_API_KEY=xxx pysakkivahti
+```
+
+To customize stops/locations without rebuilding, mount a custom `config.json` file as a volume:
+
+```bash
+docker run -d --name pysakkivahti -p 3000:3000 -e PYSAKKIVAHTI_API_KEY=xxx -v ./config.json:/app/config.json pysakkivahti
+```
+
 ## API Endpoints
 
 - `GET /api/locations` — returns configured locations, their time-based destinations, and the refresh interval
