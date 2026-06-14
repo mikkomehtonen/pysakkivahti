@@ -6,10 +6,10 @@
       "id": "home",
       "name": "Koti",
       "destination": "Keskusta",
-      "coordinates": { "lat": 61.49, "lon": 23.76 },
+      "coordinates": { "lat": 61.5014, "lon": 23.7367 },
       "radius": 200,
       "stops": [
-        { "id": "tampere:0851", "name": "Särkänniemi B", "filterHeadsigns": ["Keskustori"] }
+        { "id": "tampere:0851", "name": "Särkänniemi B", "filterHeadsigns": ["TAYS"] }
       ]
     },
     {
@@ -19,27 +19,27 @@
       "coordinates": { "lat": 61.45, "lon": 23.86 },
       "radius": 200,
       "stops": [
-        { "id": "tampere:0002", "name": "Työ", "filterHeadsigns": ["Keskustori"] }
+        { "id": "tampere:2503", "name": "Viinikanlahti", "filterHeadsigns": ["Pyynikintori", "Keskustori"] }
       ]
     },
     {
       "id": "city_centre",
       "name": "Keskusta",
-      "coordinates": { "lat": 61.498, "lon": 23.772 },
+      "coordinates": { "lat": 61.4980, "lon": 23.7647 },
       "radius": 300,
       "routes": [
         {
           "destination": "Työ",
           "beforeHour": 12,
           "stops": [
-            { "id": "tampere:0001", "name": "Keskustori P", "filterHeadsigns": ["TAYS"] }
+            { "id": "tampere:0518", "name": "Koskipuisto D", "filterHeadsigns": ["Kyösti", "Partola"] }
           ]
         },
         {
           "destination": "Koti",
           "afterHour": 12,
           "stops": [
-            { "id": "tampere:0855", "name": "Keskustori E", "filterHeadsigns": ["Lentävänniemi"] }
+            { "id": "tampere:0807", "name": "Keskustori A", "filterHeadsigns": ["Lentävänniemi"] }
           ]
         }
       ]
