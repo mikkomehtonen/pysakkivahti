@@ -5,12 +5,10 @@ Pysäkkivahti is a mobile-friendly web app that shows upcoming public transport 
 ## Features
 
 - **UI Implementation** — Mobile-friendly frontend with location selector, departure display, auto-refresh, and mock API backend ([story](stories/001-ui-implementation/story.md))
+- **Real API, Geolocation & Time-Based Routing** — config.json-driven server with Digitransit API proxy, headsign filtering, GPS-based location detection, and time-dependent City Centre routing ([story](stories/002-mvp-missing-parts/story.md))
 
 ## Non-Goals
 
-- Real Digitransit API integration (future story)
-- Geolocation-based location detection (future story)
-- Time-based routing for City Centre (future story)
 - PWA / offline support / service worker
 - Stop search UI
 - Multi-stop routing or walking distance calculation
@@ -18,7 +16,7 @@ Pysäkkivahti is a mobile-friendly web app that shows upcoming public transport 
 
 ## Known Limitations
 
-- Uses mock data; no real departure information yet
-- Manual location selection only; no GPS detection
-- City Centre location shows only one direction (no time-based switching)
+- config.json contains placeholder stop IDs for work and city centre morning route — users must replace with real GTFS IDs
+- Requires a valid Digitransit API key (`PYSAKKIVAHTI_API_KEY` in `.env`) to fetch departures
 - No offline support; requires network connection
+- Geolocation requires HTTPS in production (works on localhost in development)

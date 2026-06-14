@@ -1,8 +1,8 @@
 # Pysäkkivahti
 
-Pysäkkivahti is a mobile-first web app for checking nearby public transport departures. It shows the next departures for configured locations (Home, Work, City Centre) with realtime indicators and auto-refresh.
+Pysäkkivahti is a mobile-first web app for checking nearby public transport departures in the Tampere region. It shows the next departures for configured locations (Koti, Työ, Keskusta) with realtime indicators, GPS-based location detection, and auto-refresh.
 
-This repository contains the MVP implementation: an Express server with a mock API and a vanilla TypeScript frontend built with Vite. The real Digitransit API integration, geolocation, and time-based routing are planned for future stories.
+The Express server proxies the Digitransit API, applies headsign filtering and time-based routing from `config.json`, and serves the vanilla TypeScript frontend.
 
 ## Tech Stack
 
@@ -10,39 +10,62 @@ This repository contains the MVP implementation: an Express server with a mock A
 - **Frontend**: Vite + vanilla TypeScript + HTML/CSS
 - **Testing**: Vitest + happy-dom
 - **Linting**: ESLint + typescript-eslint
+- **API**: [Digitransit](https://digitransit.fi/) GraphQL API via server-side proxy
 
 ## Project Structure
 
 ```
 pysakkivahti/
-├── server.ts              # Express server with mock API
-├── index.html             # Vite HTML entry point
+├── config.json             # Runtime config: locations, stops, routes
+├── config.ts               # Config loader with validation
+├── digitransit.ts          # Digitransit GraphQL API client
+├── geo.ts                  # Coordinate validation and flat-earth distance
+├── server.ts               # Express server: API routes, filtering, routing
+├── index.html              # Vite HTML entry point
 ├── src/
-│   ├── main.ts            # Frontend entry point
-│   ├── app.ts             # App state, rendering, and events
-│   ├── api.ts             # API client
-│   ├── geolocation.ts     # Geolocation stub (returns null)
-│   ├── types.ts           # Shared TypeScript interfaces
-│   └── style.css          # Mobile-first styles
+│   ├── main.ts             # Frontend entry point
+│   ├── app.ts              # App state, rendering, and events
+│   ├── api.ts              # API client with response validation
+│   ├── geolocation.ts      # Browser geolocation + nearest-location lookup
+│   ├── types.ts            # Shared TypeScript interfaces and type guards
+│   └── style.css           # Mobile-first styles
 ├── tests/
-│   ├── app.test.ts        # Frontend tests
-│   └── server.test.ts     # API tests
-├── tsconfig.json          # TypeScript configuration
-├── vite.config.ts         # Vite + dev proxy + vitest config
-└── eslint.config.mjs      # ESLint flat config
+│   ├── helpers.ts          # Test utilities (withServer, factories)
+│   ├── app.test.ts         # Frontend tests
+│   ├── config.test.ts      # Config loading failure tests
+│   ├── digitransit.test.ts # Digitransit client unit tests
+│   ├── geolocation.test.ts # Geolocation unit tests
+│   ├── server.test.ts      # Server API tests (locations, departures, filtering, routing)
+│   └── server.production.test.ts  # Production static serving test
+├── tsconfig.json           # TypeScript configuration
+├── vite.config.ts          # Vite + dev proxy + vitest config
+└── eslint.config.mjs       # ESLint flat config
 ```
 
 ## Prerequisites
 
 - Node.js (version matching the installed `@types/node` peer range)
 - `npm`
-- Digitransit API key for later stories (not needed for the mock API)
+- A Digitransit API key (set via `PYSAKKIVAHTI_API_KEY`)
 
 ## Installation
 
 ```bash
 npm install
 ```
+
+## Configuration
+
+Edit `config.json` to define locations, stops, and routes. The server validates the config at startup and exits with an error if it is missing or invalid.
+
+Each location has:
+- `id`, `name` — identifier and Finnish display name
+- `destination` — default destination label (overridden by time-based routes)
+- `coordinates` + `radius` — for GPS nearest-location detection
+- `stops` — list of Digitransit stop IDs with optional `filterHeadsigns` (case-insensitive substring matching)
+- `routes` — time-based routing: each route has `destination`, `beforeHour`/`afterHour` for time selection, and its own `stops`
+
+Changes to `config.json` require a server restart.
 
 ## Development
 
@@ -91,7 +114,7 @@ NODE_ENV=production npm run server
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and add your Digitransit API key for the upcoming real API integration:
+Copy `.env.example` to `.env` and add your Digitransit API key:
 
 ```bash
 cp .env.example .env
@@ -101,16 +124,13 @@ cp .env.example .env
 PYSAKKIVAHTI_API_KEY=your-key-here
 ```
 
-The mock API story does not use the key yet.
+The departures endpoint returns 503 if the API key is missing.
 
-## Mock API
+## API Endpoints
 
-The server exposes two endpoints used by the frontend:
-
-- `GET /api/locations` — returns configured locations and refresh interval
-- `GET /api/departures?locationId=<id>` — returns departures for the selected location
-
-These shapes match the planned real Digitransit proxy so the frontend code will not change when the real API is wired in.
+- `GET /api/locations` — returns configured locations, their time-based destinations, and the refresh interval
+- `GET /api/locations/nearest?lat=<lat>&lon=<lon>` — returns the nearest location within its radius, or 404 if none match
+- `GET /api/departures?locationId=<id>` — returns departures from the Digitransit API for the given location, with headsign filtering and time-based stop selection; partial data is returned if some stops fail
 
 ## License
 

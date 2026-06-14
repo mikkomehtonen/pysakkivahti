@@ -1,8 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+
+vi.mock('../src/geolocation.ts', () => ({
+  detectLocation: vi.fn(() => Promise.resolve(null)),
+}));
+
+import { detectLocation } from '../src/geolocation.ts';
 import { App } from '../src/app.ts';
 import type { LocationsResponse, LocationDepartures } from '../src/types.ts';
+
+const mockDetectLocation = vi.mocked(detectLocation);
 
 const cssText = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf-8');
 
@@ -68,6 +76,7 @@ const defaultLocations: LocationsResponse = {
 
 const homeDepartures: LocationDepartures = {
   locationId: 'home',
+  destination: 'Keskusta',
   stops: [
     {
       stopName: 'Särkänniemi B',
@@ -82,6 +91,7 @@ const homeDepartures: LocationDepartures = {
 
 const workDepartures: LocationDepartures = {
   locationId: 'work',
+  destination: 'Keskusta',
   stops: [
     {
       stopName: 'Työ',
@@ -95,6 +105,7 @@ const workDepartures: LocationDepartures = {
 
 const emptyDepartures: LocationDepartures = {
   locationId: 'home',
+  destination: 'Keskusta',
   stops: [{ stopName: 'Särkänniemi B', departures: [] }],
 };
 
@@ -262,7 +273,7 @@ describe('App', () => {
     expect(container.querySelector('.loading')).toBeTruthy();
     expect(container.querySelector('.loading')?.getAttribute('aria-label')).toBe('Ladataan');
 
-    resolveDepartures!({ locationId: 'home', stops: [] });
+    resolveDepartures!({ locationId: 'home', destination: 'Keskusta', stops: [] });
     await mountPromise;
 
     expect(container.querySelector('.loading')).toBeFalsy();
@@ -528,6 +539,82 @@ describe('App', () => {
     expect(rows[0].querySelector('.route-number')?.textContent).toBe('3');
     expect(rows[0].querySelector('.departure-time')?.textContent).toBe('5 min');
   });
+
+  it('marks GPS-detected location with location-btn--gps class', async () => {
+    mockDetectLocation.mockResolvedValue({ id: 'home', name: 'Koti', destination: 'Keskusta' });
+    mockFetchResponses(defaultLocations, { home: homeDepartures });
+    const container = createContainer();
+    const app = new App(container);
+    await app.mount();
+
+    const buttons = container.querySelectorAll('.location-btn');
+    expect(buttons[0].classList.contains('location-btn--gps')).toBe(true);
+    expect(buttons[0].classList.contains('location-btn--active')).toBe(true);
+  });
+
+  it('removes location-btn--gps class when a different location is selected manually', async () => {
+    mockDetectLocation.mockResolvedValue({ id: 'home', name: 'Koti', destination: 'Keskusta' });
+    mockFetchResponses(defaultLocations, { home: homeDepartures, work: workDepartures });
+    const container = createContainer();
+    const app = new App(container);
+    await app.mount();
+
+    const buttonsBefore = container.querySelectorAll('.location-btn');
+    expect(buttonsBefore[0].classList.contains('location-btn--gps')).toBe(true);
+
+    buttonsBefore[1].dispatchEvent(new MouseEvent('click'));
+    await flushPromises();
+
+    const buttonsAfter = container.querySelectorAll('.location-btn');
+    expect(buttonsAfter[0].classList.contains('location-btn--gps')).toBe(false);
+    expect(buttonsAfter[1].classList.contains('location-btn--gps')).toBe(false);
+    expect(buttonsAfter[1].classList.contains('location-btn--active')).toBe(true);
+  });
+
+  it('updates selectedLocation destination from departure response on auto-refresh', async () => {
+    vi.useFakeTimers();
+    mockDetectLocation.mockResolvedValue(null);
+
+    let callCount = 0;
+    globalThis.fetch = vi.fn((input: string | Request | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url === '/api/locations') {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(defaultLocations),
+        } as Response);
+      }
+      if (url === '/api/departures?locationId=home') {
+        callCount += 1;
+        const destination = callCount === 1 ? 'Keskusta' : 'Muu';
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              locationId: 'home',
+              destination,
+              stops: [{ stopName: 'Särkänniemi B', departures: [] }],
+            }),
+        } as Response);
+      }
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({ error: 'Not found' }),
+      } as Response);
+    }) as typeof fetch;
+
+    const container = createContainer();
+    const app = new App(container);
+    await app.mount();
+
+    expect(container.querySelector('.location-header')?.textContent).toBe('Koti → Keskusta');
+
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(container.querySelector('.location-header')?.textContent).toBe('Koti → Muu');
+  });
 });
 
 describe('index.html', () => {
@@ -543,5 +630,6 @@ describe('style.css', () => {
     expect(cssText).toMatch(/\.route-number\s*\{[^}]*font-size\s*:\s*1\.25rem/s);
     expect(cssText).toMatch(/body\s*\{[^}]*max-width\s*:\s*100vw/s);
     expect(cssText).toMatch(/body\s*\{[^}]*overflow-x\s*:\s*hidden/s);
+    expect(cssText).toMatch(/\.location-btn--gps\s*\{/s);
   });
 });

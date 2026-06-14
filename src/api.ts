@@ -1,4 +1,4 @@
-import { LocationsResponse, LocationDepartures, Departure } from './types.ts';
+import { LocationsResponse, LocationDepartures, Departure, isValidLocation } from './types.ts';
 
 const API_BASE = '/api';
 
@@ -39,6 +39,11 @@ export async function fetchLocations(): Promise<LocationsResponse> {
   if (!Array.isArray(data.locations) || typeof data.refreshInterval !== 'number') {
     throw new Error('Sijaintien hakeminen epäonnistui: virheellinen vastaus');
   }
+  for (const location of data.locations) {
+    if (!isValidLocation(location)) {
+      throw new Error('Sijaintien hakeminen epäonnistui: virheellinen vastaus');
+    }
+  }
   return data;
 }
 
@@ -47,7 +52,7 @@ export async function fetchDepartures(locationId: string): Promise<LocationDepar
     `${API_BASE}/departures?locationId=${encodeURIComponent(locationId)}`,
     'Lähtöjen hakeminen epäonnistui',
   );
-  if (typeof data.locationId !== 'string' || !Array.isArray(data.stops)) {
+  if (typeof data.locationId !== 'string' || typeof data.destination !== 'string' || !Array.isArray(data.stops)) {
     throw new Error('Lähtöjen hakeminen epäonnistui: virheellinen vastaus');
   }
   for (const stop of data.stops) {

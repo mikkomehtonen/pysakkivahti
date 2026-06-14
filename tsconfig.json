@@ -12,6 +12,6 @@
     "noEmit": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["server.ts", "vite.config.ts", "src/**/*.ts", "tests/**/*.ts"],
+  "include": ["server.ts", "config.ts", "digitransit.ts", "geo.ts", "vite.config.ts", "src/**/*.ts", "tests/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

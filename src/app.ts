@@ -6,6 +6,7 @@ import './style.css';
 interface AppState {
   locations: Location[];
   selectedLocation: Location | null;
+  gpsLocationId: string | null;
   departures: LocationDepartures | null;
   loading: boolean;
   error: string | null;
@@ -24,6 +25,7 @@ export class App {
     this.state = {
       locations: [],
       selectedLocation: null,
+      gpsLocationId: null,
       departures: null,
       loading: false,
       error: null,
@@ -39,7 +41,8 @@ export class App {
       this.state.locations = locationsResponse.locations;
       this.state.refreshInterval = locationsResponse.refreshInterval;
 
-      const detected = await detectLocation(this.state.locations);
+      const detected = await detectLocation();
+      this.state.gpsLocationId = detected?.id ?? null;
       const selected = detected ?? this.state.locations[0] ?? null;
       this.state.selectedLocation = selected;
 
@@ -72,6 +75,12 @@ export class App {
       if (requestId !== this.requestId) return;
       this.state.departures = departures;
       this.state.lastUpdated = new Date();
+      if (this.state.selectedLocation) {
+        this.state.selectedLocation = {
+          ...this.state.selectedLocation,
+          destination: departures.destination,
+        };
+      }
     } catch (err) {
       if (requestId !== this.requestId) return;
       this.state.error = err instanceof Error ? err.message : 'Tuntematon virhe';
@@ -90,6 +99,7 @@ export class App {
 
   private selectLocation(location: Location): void {
     if (this.state.selectedLocation?.id === location.id) return;
+    this.state.gpsLocationId = null;
     this.state.selectedLocation = location;
     void this.loadDepartures(location.id);
   }
@@ -276,6 +286,9 @@ export class App {
       btn.textContent = location.name;
       if (this.state.selectedLocation?.id === location.id) {
         btn.classList.add('location-btn--active');
+      }
+      if (this.state.gpsLocationId === location.id) {
+        btn.classList.add('location-btn--gps');
       }
       btn.addEventListener('click', () => this.selectLocation(location));
       buttons.appendChild(btn);

@@ -1,0 +1,48 @@
+{
+  "refreshInterval": 30,
+  "departuresCount": 3,
+  "locations": [
+    {
+      "id": "home",
+      "name": "Koti",
+      "destination": "Keskusta",
+      "coordinates": { "lat": 61.49, "lon": 23.76 },
+      "radius": 200,
+      "stops": [
+        { "id": "tampere:0851", "name": "Särkänniemi B", "filterHeadsigns": ["Keskustori"] }
+      ]
+    },
+    {
+      "id": "work",
+      "name": "Työ",
+      "destination": "Keskusta",
+      "coordinates": { "lat": 61.45, "lon": 23.86 },
+      "radius": 200,
+      "stops": [
+        { "id": "tampere:0002", "name": "Työ", "filterHeadsigns": ["Keskustori"] }
+      ]
+    },
+    {
+      "id": "city_centre",
+      "name": "Keskusta",
+      "coordinates": { "lat": 61.498, "lon": 23.772 },
+      "radius": 300,
+      "routes": [
+        {
+          "destination": "Työ",
+          "beforeHour": 12,
+          "stops": [
+            { "id": "tampere:0001", "name": "Keskustori P", "filterHeadsigns": ["TAYS"] }
+          ]
+        },
+        {
+          "destination": "Koti",
+          "afterHour": 12,
+          "stops": [
+            { "id": "tampere:0855", "name": "Keskustori E", "filterHeadsigns": ["Lentävänniemi"] }
+          ]
+        }
+      ]
+    }
+  ]
+}

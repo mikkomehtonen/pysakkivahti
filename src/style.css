@@ -122,3 +122,7 @@ body {
   color: #fff;
   border-color: #111;
 }
+
+.location-btn--gps {
+  border-left: 4px solid #4caf50;
+}
