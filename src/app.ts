@@ -152,8 +152,12 @@ export class App {
     title.className = 'app-title';
     title.textContent = 'Pysäkkivahti';
 
-    const header = document.createElement('div');
-    header.className = 'location-header';
+    const appHeader = document.createElement('header');
+    appHeader.className = 'app-header';
+    appHeader.appendChild(title);
+
+    const locationHeader = document.createElement('div');
+    locationHeader.className = 'location-header';
 
     const departures = document.createElement('div');
     departures.className = 'departures-container';
@@ -164,7 +168,11 @@ export class App {
     const buttons = document.createElement('div');
     buttons.className = 'location-buttons';
 
-    this.container.append(title, header, departures, status, buttons);
+    const main = document.createElement('main');
+    main.className = 'app-main';
+    main.append(locationHeader, departures, status, buttons);
+
+    this.container.append(appHeader, main);
   }
 
   private render(): void {
@@ -283,12 +291,15 @@ export class App {
     for (const location of this.state.locations) {
       const btn = document.createElement('button');
       btn.className = 'location-btn';
-      btn.textContent = location.name;
-      if (this.state.selectedLocation?.id === location.id) {
-        btn.classList.add('location-btn--active');
-      }
       if (this.state.gpsLocationId === location.id) {
         btn.classList.add('location-btn--gps');
+        const gpsIndicator = document.createElement('span');
+        gpsIndicator.className = 'gps-indicator';
+        btn.appendChild(gpsIndicator);
+      }
+      btn.appendChild(document.createTextNode(location.name));
+      if (this.state.selectedLocation?.id === location.id) {
+        btn.classList.add('location-btn--active');
       }
       btn.addEventListener('click', () => this.selectLocation(location));
       buttons.appendChild(btn);

@@ -8,6 +8,7 @@ Pysäkkivahti is a mobile-friendly web app that shows upcoming public transport 
 - **Real API, Geolocation & Time-Based Routing** — config.json-driven server with Digitransit API proxy, headsign filtering, GPS-based location detection, and time-dependent City Centre routing ([story](stories/002-mvp-missing-parts/story.md))
 - **Favicon** — SVG favicon served via Vite public directory and linked in index.html ([story](stories/003-favicon/story.md))
 - **Docker Support** — Multi-stage Dockerfile with esbuild-bundled server and Vite-built frontend; small production image with no node_modules ([story](stories/004-docker-support/story.md))
+- **Impeccable UI Redesign** — Modern, attractive visual redesign guided by Impeccable design skills: distinctive typography, intentional color palette from brand blue, spacing rhythm, anti-pattern removal, and proper interaction states ([story](stories/005-impeccable-ui-redesign/story.md))
 
 ## Non-Goals
 

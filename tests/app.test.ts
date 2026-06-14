@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { existsSync, readFileSync, statSync } from 'fs';
 import { resolve } from 'path';
+import { execSync } from 'child_process';
 
 vi.mock('../src/geolocation.ts', () => ({
   detectLocation: vi.fn(() => Promise.resolve(null)),
@@ -127,6 +128,23 @@ describe('App', () => {
 
     expect(container.querySelector('.location-header')?.textContent).toBe('Koti → Keskusta');
     expect(globalThis.fetch).toHaveBeenCalledWith('/api/departures?locationId=home');
+  });
+
+  it('wraps the app title in a header element and content in a main element', async () => {
+    mockFetchResponses(defaultLocations, { home: homeDepartures });
+    const container = createContainer();
+    const app = new App(container);
+    await app.mount();
+
+    const header = container.querySelector('header');
+    const main = container.querySelector('main');
+    expect(header).toBeTruthy();
+    expect(main).toBeTruthy();
+    expect(header?.querySelector('.app-title')).toBeTruthy();
+    expect(main?.querySelector('.location-header')).toBeTruthy();
+    expect(main?.querySelector('.departures-container')).toBeTruthy();
+    expect(main?.querySelector('.status-bar')).toBeTruthy();
+    expect(main?.querySelector('.location-buttons')).toBeTruthy();
   });
 
   it('renders when no locations are available', async () => {
@@ -540,7 +558,7 @@ describe('App', () => {
     expect(rows[0].querySelector('.departure-time')?.textContent).toBe('5 min');
   });
 
-  it('marks GPS-detected location with location-btn--gps class', async () => {
+  it('marks GPS-detected location with location-btn--gps class and a gps-indicator element', async () => {
     mockDetectLocation.mockResolvedValue({ id: 'home', name: 'Koti', destination: 'Keskusta' });
     mockFetchResponses(defaultLocations, { home: homeDepartures });
     const container = createContainer();
@@ -550,9 +568,15 @@ describe('App', () => {
     const buttons = container.querySelectorAll('.location-btn');
     expect(buttons[0].classList.contains('location-btn--gps')).toBe(true);
     expect(buttons[0].classList.contains('location-btn--active')).toBe(true);
+
+    const indicator = buttons[0].querySelector('.gps-indicator');
+    expect(indicator).toBeTruthy();
+    expect(indicator).toBeInstanceOf(HTMLElement);
+    expect(buttons[1].querySelector('.gps-indicator')).toBeFalsy();
+    expect(buttons[2].querySelector('.gps-indicator')).toBeFalsy();
   });
 
-  it('removes location-btn--gps class when a different location is selected manually', async () => {
+  it('removes location-btn--gps class and gps-indicator elements when a different location is selected manually', async () => {
     mockDetectLocation.mockResolvedValue({ id: 'home', name: 'Koti', destination: 'Keskusta' });
     mockFetchResponses(defaultLocations, { home: homeDepartures, work: workDepartures });
     const container = createContainer();
@@ -561,6 +585,7 @@ describe('App', () => {
 
     const buttonsBefore = container.querySelectorAll('.location-btn');
     expect(buttonsBefore[0].classList.contains('location-btn--gps')).toBe(true);
+    expect(buttonsBefore[0].querySelector('.gps-indicator')).toBeTruthy();
 
     buttonsBefore[1].dispatchEvent(new MouseEvent('click'));
     await flushPromises();
@@ -569,6 +594,9 @@ describe('App', () => {
     expect(buttonsAfter[0].classList.contains('location-btn--gps')).toBe(false);
     expect(buttonsAfter[1].classList.contains('location-btn--gps')).toBe(false);
     expect(buttonsAfter[1].classList.contains('location-btn--active')).toBe(true);
+    expect(buttonsAfter[0].querySelector('.gps-indicator')).toBeFalsy();
+    expect(buttonsAfter[1].querySelector('.gps-indicator')).toBeFalsy();
+    expect(buttonsAfter[2].querySelector('.gps-indicator')).toBeFalsy();
   });
 
   it('updates selectedLocation destination from departure response on auto-refresh', async () => {
@@ -636,6 +664,22 @@ describe('index.html', () => {
     expect(titlePos).toBeGreaterThan(-1);
     expect(faviconPos).toBeLessThan(titlePos);
   });
+
+  it('includes Google Fonts preconnect hints', () => {
+    const htmlText = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8');
+    expect(htmlText).toMatch(/<link[^>]*rel="preconnect"[^>]*href="https:\/\/fonts\.googleapis\.com"[^>]*>/);
+    expect(htmlText).toMatch(/<link[^>]*rel="preconnect"[^>]*href="https:\/\/fonts\.gstatic\.com"[^>]*crossorigin[^>]*>/);
+  });
+
+  it('includes a Google Font link with display=swap before the title', () => {
+    const htmlText = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8');
+    expect(htmlText).toMatch(/<link[^>]*href="https:\/\/fonts\.googleapis\.com\/css2\?family=[^"]+display=swap"[^>]*>/);
+    const fontPos = htmlText.indexOf('fonts.googleapis.com/css2');
+    const titlePos = htmlText.indexOf('<title>');
+    expect(fontPos).toBeGreaterThan(-1);
+    expect(titlePos).toBeGreaterThan(-1);
+    expect(fontPos).toBeLessThan(titlePos);
+  });
 });
 
 describe('favicon.svg', () => {
@@ -652,6 +696,22 @@ describe('favicon.svg', () => {
   });
 });
 
+describe('impeccable', () => {
+  it('detects no anti-patterns in src/', () => {
+    let exitCode = 0;
+    try {
+      execSync('npx --no-install impeccable detect src/', {
+        encoding: 'utf-8',
+        cwd: process.cwd(),
+        stdio: 'pipe',
+      });
+    } catch (err) {
+      exitCode = (err as { status?: number }).status ?? 1;
+    }
+    expect(exitCode).toBe(0);
+  });
+});
+
 describe('style.css', () => {
   it('has required CSS rules', () => {
     expect(cssText).toMatch(/\.location-btn\s*\{[^}]*min-height\s*:\s*44px/s);
@@ -659,5 +719,76 @@ describe('style.css', () => {
     expect(cssText).toMatch(/body\s*\{[^}]*max-width\s*:\s*100vw/s);
     expect(cssText).toMatch(/body\s*\{[^}]*overflow-x\s*:\s*hidden/s);
     expect(cssText).toMatch(/\.location-btn--gps\s*\{/s);
+  });
+
+  it('defines the brand accent and a 4px spacing scale', () => {
+    expect(cssText).toMatch(/--color-accent\s*:\s*oklch\(/s);
+    const spaceMatches = cssText.match(/--space-\w+\s*:/g) ?? [];
+    expect(spaceMatches.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('uses the Google Font display face for headings and a system font for body', () => {
+    expect(cssText).toMatch(/\.app-title\s*\{[^}]*font-family\s*:\s*var\(--font-display\)/s);
+    expect(cssText).toMatch(/\.location-header\s*\{[^}]*font-family\s*:\s*var\(--font-display\)/s);
+    expect(cssText).toMatch(/body\s*\{[^}]*font-family\s*:\s*var\(--font-body\)/s);
+  });
+
+  it('has a body font-size of at least 1rem and a modular type scale', () => {
+    const bodyMatch = cssText.match(/body\s*\{[^}]*font-size\s*:\s*([\d.]+)rem/s);
+    expect(bodyMatch).toBeTruthy();
+    expect(parseFloat(bodyMatch![1])).toBeGreaterThanOrEqual(1);
+    const typeScale = [0.875, 1.125, 1.5, 2.0];
+    for (const size of typeScale) {
+      expect(cssText).toMatch(new RegExp(`font-size\\s*:\\s*${size.toString().replace('.', '\\.')}rem`));
+    }
+    for (let i = 1; i < typeScale.length; i += 1) {
+      expect(typeScale[i] / typeScale[i - 1]).toBeGreaterThanOrEqual(1.25);
+    }
+  });
+
+  it('does not use a side-tab border on the GPS button', () => {
+    const gpsRule = cssText.match(/\.location-btn--gps\s*\{([^}]*)\}/s);
+    expect(gpsRule).toBeTruthy();
+    expect(gpsRule![1]).not.toMatch(/border-left\s*:/);
+  });
+
+  it('does not use extreme border-radius on cards or gradient text', () => {
+    expect(cssText).not.toMatch(/border-radius\s*:\s*(1[7-9]|[2-9]\d)\s*px/);
+    expect(cssText).not.toMatch(/background-clip\s*:\s*text/);
+  });
+
+  it('does not use purple, violet, or cyan as the primary color', () => {
+    expect(cssText).not.toMatch(/oklch\([^)]*0\.(1[0-9]|[2-9][0-9])\s+(?:2[7-9][0-9]|3[0-3][0-9])(?:\.\d+)?\)/);
+    expect(cssText).not.toMatch(/#7c3aed|#8b5cf6|#06b6d4/);
+  });
+
+  it('does not use a warm cream or beige background', () => {
+    const rootMatch = cssText.match(/:root\s*\{[^}]*--color-bg\s*:\s*(#[0-9a-f]{6})/s);
+    expect(rootMatch).toBeTruthy();
+    expect(rootMatch![1]).not.toMatch(/f5f5f5|faf5ee/i);
+    const bodyMatch = cssText.match(/body\s*\{([^}]*)\}/s);
+    expect(bodyMatch).toBeTruthy();
+    expect(bodyMatch![1]).not.toMatch(/#f5f5f5|#faf5ee/i);
+  });
+
+  it('provides visible focus rings on buttons', () => {
+    expect(cssText).toMatch(/\.location-btn:focus-visible\s*\{[^}]*(?:outline|box-shadow)/s);
+    expect(cssText).toMatch(/\.refresh-btn:focus-visible\s*\{[^}]*(?:outline|box-shadow)/s);
+  });
+
+  it('has hover and active states with short transitions', () => {
+    expect(cssText).toMatch(/\.location-btn:hover\s*\{/s);
+    expect(cssText).toMatch(/\.location-btn:active\s*\{/s);
+    const transitionMatch = cssText.match(/\.location-btn\s*\{[^}]*transition\s*:([^}]*)\}/s)
+      ?? cssText.match(/\.refresh-btn\s*\{[^}]*transition\s*:([^}]*)\}/s);
+    expect(transitionMatch).toBeTruthy();
+    const durations = [...transitionMatch![1].matchAll(/(\d+)ms/g)].map((m) => parseInt(m[1], 10));
+    expect(durations.length).toBeGreaterThan(0);
+    expect(Math.max(...durations)).toBeLessThanOrEqual(200);
+    expect(cssText).not.toMatch(/transition-timing-function\s*:\s*[^;]*(?:bounce|elastic)/);
+  });
+
+  it('respects reduced motion preferences', () => {
+    expect(cssText).toMatch(/@media\s*\(prefers-reduced-motion\s*:\s*reduce\)\s*\{[^}]*transition-duration\s*:\s*0s/s);
   });
 });

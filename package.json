@@ -27,6 +27,7 @@
     "esbuild": "^0.28.1",
     "eslint": "^9.23.0",
     "happy-dom": "^20.10.3",
+    "impeccable": "^2.3.2",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.0",

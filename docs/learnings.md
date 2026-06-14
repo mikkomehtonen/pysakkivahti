@@ -29,3 +29,15 @@
 **Area**: testing
 **What happened**: Separate `server.test.ts`, `server.filter.test.ts`, and `server.routing.test.ts` each repeated the `vi.mock('../config.ts', ...)` boilerplate. Consolidating them into `server.test.ts` with one comprehensive config satisfied the reviewer and simplified maintenance.
 **Takeaway**: When multiple test files share the same modules that need mocking but differ only in config data, prefer a single test file with a combined fixture over many small files with duplicated `vi.mock` calls.
+
+## `npx impeccable detect` exits 0 with no output when clean
+**Date**: 2026-06-14
+**Area**: testing
+**What happened**: The first test for the Impeccable anti-pattern check asserted that the CLI output contained `0 anti-patterns`. In practice, the CLI prints nothing when no anti-patterns are found and exits with code 0.
+**Takeaway**: When verifying `npx impeccable detect <path>` in a test, assert on the exit code (0) rather than the stdout content. Use `npx --no-install` to avoid network calls in CI.
+
+## OKLCH fallbacks must use `@supports`, not duplicate custom property declarations
+**Date**: 2026-06-14
+**Area**: styling
+**What happened**: The initial redesign defined each color custom property twice (`--color-accent: #hex; --color-accent: oklch(...);`) and repeated `property: hex; property: var(--token);` in individual rules. Because CSS custom properties accept any token stream, the oklch declaration always overrides the hex, and a failed `var()` substitution yields the property's initial value — not the previous cascade layer — so the hex fallbacks are dead code.
+**Takeaway**: Gate oklch tokens inside `@supports (color: oklch(0 0 0))` with hex defaults outside, then use `var(--token)` directly in rules. Never rely on duplicate declarations as a fallback mechanism.
