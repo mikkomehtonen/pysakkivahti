@@ -18,6 +18,7 @@ export class App {
   private container: HTMLElement;
   private state: AppState;
   private timer: ReturnType<typeof setInterval> | null = null;
+  private timeAgoTimer: ReturnType<typeof setInterval> | null = null;
   private requestId = 0;
 
   constructor(container: HTMLElement) {
@@ -36,6 +37,7 @@ export class App {
 
   async mount(): Promise<void> {
     this.renderSkeleton();
+    this.timeAgoTimer = setInterval(() => this.updateTimeAgo(), 1000);
     try {
       const locationsResponse = await fetchLocations();
       this.state.locations = locationsResponse.locations;
@@ -61,6 +63,10 @@ export class App {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
+    }
+    if (this.timeAgoTimer) {
+      clearInterval(this.timeAgoTimer);
+      this.timeAgoTimer = null;
     }
   }
 
@@ -281,6 +287,13 @@ export class App {
     refreshBtn.addEventListener('click', () => this.refresh());
 
     status.append(updated, refreshBtn);
+  }
+
+  private updateTimeAgo(): void {
+    const updated = this.container.querySelector('.last-updated');
+    if (updated && this.state.lastUpdated) {
+      updated.textContent = `Päivitetty ${formatTimeAgo(this.state.lastUpdated)}`;
+    }
   }
 
   private renderLocationButtons(): void {

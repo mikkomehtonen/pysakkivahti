@@ -439,6 +439,84 @@ describe('App', () => {
     expect(container.querySelector('.last-updated')?.textContent).toBe('Päivitetty 0s sitten');
   });
 
+  it('updates relative time every second via timeAgo timer', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    const longRefreshIntervalLocations = { ...defaultLocations, refreshInterval: 1_000_000 };
+    mockFetchResponses(longRefreshIntervalLocations, { home: homeDepartures });
+    const container = createContainer();
+    const app = new App(container);
+    await app.mount();
+
+    expect(container.querySelector('.last-updated')?.textContent).toBe('Päivitetty 0s sitten');
+
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(container.querySelector('.last-updated')?.textContent).toBe('Päivitetty 1s sitten');
+
+    await vi.advanceTimersByTimeAsync(4_000);
+    expect(container.querySelector('.last-updated')?.textContent).toBe('Päivitetty 5s sitten');
+
+    await vi.advanceTimersByTimeAsync(85_000);
+    expect(container.querySelector('.last-updated')?.textContent).toBe('Päivitetty 1min sitten');
+
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(container.querySelector('.last-updated')?.textContent).toBe('Päivitetty 2min sitten');
+
+    await vi.advanceTimersByTimeAsync(3_580_000);
+    expect(container.querySelector('.last-updated')?.textContent).toBe('Päivitetty 1h sitten');
+
+    app.destroy();
+  });
+
+  it('does not update last-updated when no data has been fetched', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    globalThis.fetch = vi.fn((input: string | Request | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url === '/api/locations') {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ locations: [], refreshInterval: 30 }),
+        } as Response);
+      }
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({ error: 'Not found' }),
+      } as Response);
+    }) as typeof fetch;
+
+    const container = createContainer();
+    const app = new App(container);
+    await app.mount();
+
+    const lastUpdated = container.querySelector('.last-updated');
+    expect(lastUpdated?.textContent).toBe('');
+
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(lastUpdated?.textContent).toBe('');
+
+    app.destroy();
+  });
+
+  it('clears timeAgo timer on destroy', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    const longRefreshIntervalLocations = { ...defaultLocations, refreshInterval: 1_000_000 };
+    mockFetchResponses(longRefreshIntervalLocations, { home: homeDepartures });
+    const container = createContainer();
+    const app = new App(container);
+    await app.mount();
+
+    expect(container.querySelector('.last-updated')?.textContent).toBe('Päivitetty 0s sitten');
+
+    app.destroy();
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    expect(container.querySelector('.last-updated')?.textContent).toBe('Päivitetty 0s sitten');
+  });
+
   it('replaces error with departures after successful auto-refresh', async () => {
     vi.useFakeTimers();
     let callCount = 0;

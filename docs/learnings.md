@@ -1,5 +1,13 @@
 # Learnings
 
+## Isolate the 1-second UI timer from the 30-second data refresh timer in fake-timer tests
+**Date**: 2026-06-15
+**Area**: testing
+**What happened**: When testing the new `timeAgoTimer` with `vi.useFakeTimers()`, advancing time by many seconds also caused the existing 30-second data refresh timer to fire. Each refresh resets `state.lastUpdated` to the current `Date.now()`, which breaks relative-time assertions (e.g., expecting "1min sitten" after 90 seconds).
+**Takeaway**: For tests that advance time to assert the relative-time display, use a fixture with a very large `refreshInterval` (e.g., `1_000_000`) so the data refresh timer does not fire during the test. The `timeAgoTimer` can still be verified independently.
+
+---
+
 ## config.ts has a module-level side effect; tests must mock it before importing server code
 **Date**: 2026-06-14
 **Area**: testing
