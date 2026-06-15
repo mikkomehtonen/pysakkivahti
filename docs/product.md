@@ -10,6 +10,7 @@ Pysäkkivahti is a mobile-friendly web app that shows upcoming public transport 
 - **Docker Support** — Multi-stage Dockerfile with esbuild-bundled server and Vite-built frontend; small production image with no node_modules ([story](stories/004-docker-support/story.md))
 - **Impeccable UI Redesign** — Modern, attractive visual redesign guided by Impeccable design skills: distinctive typography, intentional color palette from brand blue, spacing rhythm, anti-pattern removal, and proper interaction states ([story](stories/005-impeccable-ui-redesign/story.md))
 - **Fix Relative Time Display** — "Päivitetty 0s sitten" was stuck at zero because the relative time was only recomputed on full re-renders; a 1-second tick timer now updates the "Päivitetty" text between data refreshes ([story](stories/006-fix-relative-time/story.md))
+- **Fix npm Audit Vulnerabilities** — Resolve 2 low-severity ReDoS vulnerabilities in @eslint/plugin-kit by bumping eslint minimum to ^9.32.0 and regenerating the lockfile ([story](stories/007-fix-npm-audit/story.md))
 
 ## Non-Goals
 
