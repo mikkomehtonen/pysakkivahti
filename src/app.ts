@@ -154,13 +154,18 @@ export class App {
   private renderSkeleton(): void {
     this.container.innerHTML = '';
 
+    const logo = document.createElement('img');
+    logo.className = 'app-logo';
+    logo.src = '/favicon.svg';
+    logo.alt = '';
+
     const title = document.createElement('h1');
     title.className = 'app-title';
     title.textContent = 'Pysäkkivahti';
 
     const appHeader = document.createElement('header');
     appHeader.className = 'app-header';
-    appHeader.appendChild(title);
+    appHeader.append(logo, title);
 
     const locationHeader = document.createElement('div');
     locationHeader.className = 'location-header';

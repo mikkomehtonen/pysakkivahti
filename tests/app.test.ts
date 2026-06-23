@@ -147,6 +147,32 @@ describe('App', () => {
     expect(main?.querySelector('.location-buttons')).toBeTruthy();
   });
 
+  it('renders the logo to the left of the app title', async () => {
+    mockFetchResponses(defaultLocations, { home: homeDepartures });
+    const container = createContainer();
+    const app = new App(container);
+    await app.mount();
+
+    const header = container.querySelector('header.app-header');
+    expect(header).toBeTruthy();
+
+    const logo = header?.querySelector('img.app-logo');
+    expect(logo).toBeTruthy();
+    expect(logo?.getAttribute('src')).toBe('/favicon.svg');
+    expect(logo?.getAttribute('alt')).toBe('');
+
+    const title = header?.querySelector('.app-title');
+    expect(title).toBeTruthy();
+    expect(title?.textContent).toBe('Pysäkkivahti');
+
+    const children = Array.from(header!.children);
+    const logoIndex = children.findIndex((child) => child.classList.contains('app-logo'));
+    const titleIndex = children.findIndex((child) => child.classList.contains('app-title'));
+    expect(logoIndex).toBe(0);
+    expect(titleIndex).toBe(1);
+    expect(logoIndex).toBeLessThan(titleIndex);
+  });
+
   it('renders when no locations are available', async () => {
     globalThis.fetch = vi.fn((input: string | Request | URL) => {
       const url = typeof input === 'string' ? input : input.toString();
@@ -797,6 +823,24 @@ describe('style.css', () => {
     expect(cssText).toMatch(/body\s*\{[^}]*max-width\s*:\s*100vw/s);
     expect(cssText).toMatch(/body\s*\{[^}]*overflow-x\s*:\s*hidden/s);
     expect(cssText).toMatch(/\.location-btn--gps\s*\{/s);
+  });
+
+  it('styles the header as a flex row and sizes the logo', () => {
+    const headerRule = cssText.match(/\.app-header\s*\{([^}]*)\}/s);
+    expect(headerRule).toBeTruthy();
+    expect(headerRule![1]).toMatch(/display\s*:\s*flex/s);
+    expect(headerRule![1]).toMatch(/align-items\s*:\s*center/s);
+    expect(headerRule![1]).toMatch(/gap\s*:\s*var\(--space-/s);
+    expect(headerRule![1]).toMatch(/margin-bottom\s*:/s);
+
+    const logoRule = cssText.match(/\.app-logo\s*\{([^}]*)\}/s);
+    expect(logoRule).toBeTruthy();
+    const widthMatch = logoRule![1].match(/width\s*:\s*([\d.]+rem)/s);
+    const heightMatch = logoRule![1].match(/height\s*:\s*([\d.]+rem)/s);
+    expect(widthMatch).toBeTruthy();
+    expect(heightMatch).toBeTruthy();
+    expect(widthMatch![1]).toBe(heightMatch![1]);
+    expect(logoRule![1]).toMatch(/flex-shrink\s*:\s*0/s);
   });
 
   it('defines the brand accent and a 4px spacing scale', () => {
