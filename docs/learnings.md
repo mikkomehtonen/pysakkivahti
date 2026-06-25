@@ -49,3 +49,11 @@
 **Area**: styling
 **What happened**: The initial redesign defined each color custom property twice (`--color-accent: #hex; --color-accent: oklch(...);`) and repeated `property: hex; property: var(--token);` in individual rules. Because CSS custom properties accept any token stream, the oklch declaration always overrides the hex, and a failed `var()` substitution yields the property's initial value — not the previous cascade layer — so the hex fallbacks are dead code.
 **Takeaway**: Gate oklch tokens inside `@supports (color: oklch(0 0 0))` with hex defaults outside, then use `var(--token)` directly in rules. Never rely on duplicate declarations as a fallback mechanism.
+
+---
+
+## Mock `document.visibilityState` in happy-dom with a getter spy
+**Date**: 2026-06-25
+**Area**: testing
+**What happened**: In happy-dom 20.10.3, `document.visibilityState` is a prototype getter that always returns `'visible'` when a `defaultView` exists. Direct assignment (`document.visibilityState = 'hidden'`) has no effect, so tests for the Page Visibility API must use `vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden' | 'visible')` before dispatching `new Event('visibilitychange')`.
+**Takeaway**: When testing visibility-driven behavior in happy-dom, always spy on the getter; the spy is restored automatically by `vi.restoreAllMocks()` in `afterEach`.

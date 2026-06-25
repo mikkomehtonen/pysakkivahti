@@ -44,6 +44,7 @@ Dependency is `express@^5`, not Express 4. Some APIs differ (e.g., async middlew
 - Frontend tests mock `globalThis.fetch` manually with `vi.fn()` — no MSW or similar.
 - Test file reads `src/style.css` via `readFileSync` for CSS rule assertions.
 - Unused vars/args prefixed with `_` are allowed by ESLint (`argsIgnorePattern`, `varsIgnorePattern`).
+- When the `App` class attaches listeners to `document` or `window`, every test that creates an `App` must destroy it (or use a helper that tracks created apps and destroys them in `afterEach`). Leaked listeners fire on events dispatched by later tests and cause confusing failures.
 
 ## Finnish UI
 

@@ -12,6 +12,7 @@ Pysäkkivahti is a mobile-friendly web app that shows upcoming public transport 
 - **Fix Relative Time Display** — "Päivitetty 0s sitten" was stuck at zero because the relative time was only recomputed on full re-renders; a 1-second tick timer now updates the "Päivitetty" text between data refreshes ([story](stories/006-fix-relative-time/story.md))
 - **Fix npm Audit Vulnerabilities** — Resolve 2 low-severity ReDoS vulnerabilities in @eslint/plugin-kit by bumping eslint minimum to ^9.32.0 and regenerating the lockfile ([story](stories/007-fix-npm-audit/story.md))
 - **Logo Beside Title** — Display the favicon brand mark to the left of the "Pysäkkivahti" app title via a flexbox header layout ([story](stories/008-logo-beside-title/story.md))
+- **Reload on Visibility Change** — Reload departures when the page becomes visible again (screen unlock / app foreground) via the Page Visibility API, so users no longer see a stale "Lähtöjen hakeminen epäonnistui" error after returning to the app ([story](stories/009-reload-on-visibility/story.md))
 
 ## Non-Goals
 

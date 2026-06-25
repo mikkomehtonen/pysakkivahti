@@ -24,6 +24,14 @@ function flushPromises(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+const mountedApps: App[] = [];
+
+function createApp(container: HTMLElement): App {
+  const app = new App(container);
+  mountedApps.push(app);
+  return app;
+}
+
 function mockFetchResponses(
   locations: LocationsResponse,
   departures: Record<string, LocationDepartures>,
@@ -116,6 +124,10 @@ describe('App', () => {
   });
 
   afterEach(() => {
+    for (const app of mountedApps) {
+      app.destroy();
+    }
+    mountedApps.length = 0;
     vi.restoreAllMocks();
     vi.useRealTimers();
   });
@@ -123,7 +135,7 @@ describe('App', () => {
   it('selects first location on mount and renders header', async () => {
     mockFetchResponses(defaultLocations, { home: homeDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     expect(container.querySelector('.location-header')?.textContent).toBe('Koti → Keskusta');
@@ -133,7 +145,7 @@ describe('App', () => {
   it('wraps the app title in a header element and content in a main element', async () => {
     mockFetchResponses(defaultLocations, { home: homeDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     const header = container.querySelector('header');
@@ -150,7 +162,7 @@ describe('App', () => {
   it('renders the logo to the left of the app title', async () => {
     mockFetchResponses(defaultLocations, { home: homeDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     const header = container.querySelector('header.app-header');
@@ -191,7 +203,7 @@ describe('App', () => {
     }) as typeof fetch;
 
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     expect(container.querySelector('.location-header')).toBeTruthy();
@@ -228,7 +240,7 @@ describe('App', () => {
     }) as typeof fetch;
 
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
     expect(container.querySelector('.empty')?.textContent).toBe('Ei sijainteja saatavilla');
 
@@ -242,7 +254,7 @@ describe('App', () => {
   it('renders exactly N departure rows ordered by minutes ascending', async () => {
     mockFetchResponses(defaultLocations, { home: homeDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     const rows = container.querySelectorAll('.departure-row');
@@ -259,7 +271,7 @@ describe('App', () => {
   it('adds realtime class for realtime departures', async () => {
     mockFetchResponses(defaultLocations, { home: homeDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     const rows = container.querySelectorAll('.departure-row');
@@ -271,7 +283,7 @@ describe('App', () => {
   it('switches location and active button on click', async () => {
     mockFetchResponses(defaultLocations, { home: homeDepartures, work: workDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     const buttonsBefore = container.querySelectorAll('.location-btn');
@@ -310,7 +322,7 @@ describe('App', () => {
     }) as typeof fetch;
 
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     const mountPromise = app.mount();
     await flushPromises();
 
@@ -337,7 +349,7 @@ describe('App', () => {
     }) as typeof fetch;
 
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     const error = container.querySelector('.error');
@@ -363,7 +375,7 @@ describe('App', () => {
     }) as typeof fetch;
 
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     expect(container.querySelector('.error')).toBeTruthy();
@@ -392,7 +404,7 @@ describe('App', () => {
     }) as typeof fetch;
 
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     expect(container.querySelector('.error')).toBeTruthy();
@@ -402,7 +414,7 @@ describe('App', () => {
   it('shows "Ei lähtöjä" when no departures', async () => {
     mockFetchResponses(defaultLocations, { home: emptyDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     expect(container.querySelector('.empty')?.textContent).toBe('Ei lähtöjä');
@@ -411,7 +423,7 @@ describe('App', () => {
   it('shows error and no buttons when locations fetch fails', async () => {
     mockFetchError('Network error');
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     expect(container.querySelector('.error')).toBeTruthy();
@@ -423,7 +435,7 @@ describe('App', () => {
     vi.useFakeTimers();
     mockFetchResponses(defaultLocations, { home: homeDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     const fetchCalls = vi.mocked(globalThis.fetch).mock.calls.length;
@@ -436,7 +448,7 @@ describe('App', () => {
     vi.useFakeTimers();
     mockFetchResponses(defaultLocations, { home: homeDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     await vi.advanceTimersByTimeAsync(15_000);
@@ -459,7 +471,7 @@ describe('App', () => {
     vi.setSystemTime(0);
     mockFetchResponses(defaultLocations, { home: homeDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     expect(container.querySelector('.last-updated')?.textContent).toBe('Päivitetty 0s sitten');
@@ -471,7 +483,7 @@ describe('App', () => {
     const longRefreshIntervalLocations = { ...defaultLocations, refreshInterval: 1_000_000 };
     mockFetchResponses(longRefreshIntervalLocations, { home: homeDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     expect(container.querySelector('.last-updated')?.textContent).toBe('Päivitetty 0s sitten');
@@ -514,7 +526,7 @@ describe('App', () => {
     }) as typeof fetch;
 
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     const lastUpdated = container.querySelector('.last-updated');
@@ -532,7 +544,7 @@ describe('App', () => {
     const longRefreshIntervalLocations = { ...defaultLocations, refreshInterval: 1_000_000 };
     mockFetchResponses(longRefreshIntervalLocations, { home: homeDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     expect(container.querySelector('.last-updated')?.textContent).toBe('Päivitetty 0s sitten');
@@ -567,7 +579,7 @@ describe('App', () => {
     }) as typeof fetch;
 
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
     expect(container.querySelector('.error')).toBeTruthy();
 
@@ -594,7 +606,7 @@ describe('App', () => {
     }) as typeof fetch;
 
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     const error = container.querySelector('.error');
@@ -642,7 +654,7 @@ describe('App', () => {
     }) as typeof fetch;
 
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     const mountPromise = app.mount();
     await flushPromises();
 
@@ -666,7 +678,7 @@ describe('App', () => {
     mockDetectLocation.mockResolvedValue({ id: 'home', name: 'Koti', destination: 'Keskusta' });
     mockFetchResponses(defaultLocations, { home: homeDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     const buttons = container.querySelectorAll('.location-btn');
@@ -684,7 +696,7 @@ describe('App', () => {
     mockDetectLocation.mockResolvedValue({ id: 'home', name: 'Koti', destination: 'Keskusta' });
     mockFetchResponses(defaultLocations, { home: homeDepartures, work: workDepartures });
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     const buttonsBefore = container.querySelectorAll('.location-btn');
@@ -739,13 +751,107 @@ describe('App', () => {
     }) as typeof fetch;
 
     const container = createContainer();
-    const app = new App(container);
+    const app = createApp(container);
     await app.mount();
 
     expect(container.querySelector('.location-header')?.textContent).toBe('Koti → Keskusta');
 
     await vi.advanceTimersByTimeAsync(30_000);
     expect(container.querySelector('.location-header')?.textContent).toBe('Koti → Muu');
+  });
+
+  it('reloads departures when page becomes visible', async () => {
+    mockFetchResponses(defaultLocations, { home: homeDepartures });
+    const container = createContainer();
+    const app = createApp(container);
+    await app.mount();
+
+    const fetchCalls = vi.mocked(globalThis.fetch).mock.calls.length;
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    expect(vi.mocked(globalThis.fetch).mock.calls.length).toBe(fetchCalls + 1);
+    expect(vi.mocked(globalThis.fetch)).toHaveBeenLastCalledWith('/api/departures?locationId=home');
+  });
+
+  it('does not reload departures when page becomes hidden', async () => {
+    mockFetchResponses(defaultLocations, { home: homeDepartures });
+    const container = createContainer();
+    const app = createApp(container);
+    await app.mount();
+
+    const fetchCalls = vi.mocked(globalThis.fetch).mock.calls.length;
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    expect(vi.mocked(globalThis.fetch).mock.calls.length).toBe(fetchCalls);
+  });
+
+  it('does not reload after visibility change when destroyed', async () => {
+    mockFetchResponses(defaultLocations, { home: homeDepartures });
+    const container = createContainer();
+    const app = createApp(container);
+    await app.mount();
+
+    app.destroy();
+    const fetchCalls = vi.mocked(globalThis.fetch).mock.calls.length;
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    expect(vi.mocked(globalThis.fetch).mock.calls.length).toBe(fetchCalls);
+  });
+
+  it('replaces stale error with fresh departures when page becomes visible', async () => {
+    let callCount = 0;
+    globalThis.fetch = vi.fn((input: string | Request | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url === '/api/locations') {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(defaultLocations),
+        } as Response);
+      }
+      callCount += 1;
+      if (callCount === 1) {
+        return Promise.reject(new Error('Network error'));
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(homeDepartures),
+      } as Response);
+    }) as typeof fetch;
+
+    const container = createContainer();
+    const app = createApp(container);
+    await app.mount();
+    expect(container.querySelector('.error')).toBeTruthy();
+
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    document.dispatchEvent(new Event('visibilitychange'));
+    await flushPromises();
+
+    expect(container.querySelector('.error')).toBeFalsy();
+    expect(container.querySelectorAll('.departure-row').length).toBe(3);
+  });
+
+  it('resets auto-refresh timer after visibility reload', async () => {
+    vi.useFakeTimers();
+    mockFetchResponses(defaultLocations, { home: homeDepartures });
+    const container = createContainer();
+    const app = createApp(container);
+    await app.mount();
+
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    document.dispatchEvent(new Event('visibilitychange'));
+    const fetchCallsAfterVisibility = vi.mocked(globalThis.fetch).mock.calls.length;
+
+    await vi.advanceTimersByTimeAsync(29_000);
+    expect(vi.mocked(globalThis.fetch).mock.calls.length).toBe(fetchCallsAfterVisibility);
+
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(vi.mocked(globalThis.fetch).mock.calls.length).toBe(fetchCallsAfterVisibility + 1);
   });
 });
 

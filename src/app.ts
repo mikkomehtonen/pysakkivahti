@@ -21,6 +21,12 @@ export class App {
   private timeAgoTimer: ReturnType<typeof setInterval> | null = null;
   private requestId = 0;
 
+  private onVisibilityChange = (): void => {
+    if (document.visibilityState === 'visible') {
+      this.refresh();
+    }
+  };
+
   constructor(container: HTMLElement) {
     this.container = container;
     this.state = {
@@ -38,6 +44,7 @@ export class App {
   async mount(): Promise<void> {
     this.renderSkeleton();
     this.timeAgoTimer = setInterval(() => this.updateTimeAgo(), 1000);
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
     try {
       const locationsResponse = await fetchLocations();
       this.state.locations = locationsResponse.locations;
@@ -68,6 +75,7 @@ export class App {
       clearInterval(this.timeAgoTimer);
       this.timeAgoTimer = null;
     }
+    document.removeEventListener('visibilitychange', this.onVisibilityChange);
   }
 
   private async loadDepartures(locationId: string): Promise<void> {
