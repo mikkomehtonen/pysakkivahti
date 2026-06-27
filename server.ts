@@ -27,6 +27,7 @@ export function startServer(port = getPort()): ReturnType<typeof app.listen> {
 
 export function buildLocationsResponse(): LocationsResponse {
   const hour = new Date().getHours();
+  const logoLinkUrl = process.env.LOGO_LINK_URL?.trim();
   return {
     locations: config.locations.map((location) => {
       const route = selectRoute(location, hour);
@@ -37,6 +38,7 @@ export function buildLocationsResponse(): LocationsResponse {
       };
     }),
     refreshInterval: config.refreshInterval,
+    ...(logoLinkUrl ? { logoLinkUrl } : {}),
   };
 }
 

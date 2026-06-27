@@ -36,7 +36,11 @@ export async function fetchLocations(): Promise<LocationsResponse> {
     `${API_BASE}/locations`,
     'Sijaintien hakeminen epäonnistui',
   );
-  if (!Array.isArray(data.locations) || typeof data.refreshInterval !== 'number') {
+  if (
+    !Array.isArray(data.locations) ||
+    typeof data.refreshInterval !== 'number' ||
+    (data.logoLinkUrl !== undefined && typeof data.logoLinkUrl !== 'string')
+  ) {
     throw new Error('Sijaintien hakeminen epäonnistui: virheellinen vastaus');
   }
   for (const location of data.locations) {

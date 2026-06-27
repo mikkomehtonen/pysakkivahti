@@ -104,6 +104,48 @@ describe('GET /api/locations', () => {
       }
     });
   });
+
+  describe('logoLinkUrl', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('includes logoLinkUrl from LOGO_LINK_URL env var', async () => {
+      vi.stubEnv('LOGO_LINK_URL', 'https://example.com');
+      await withServer(async (baseUrl) => {
+        const response = await fetch(`${baseUrl}/api/locations`);
+        const body = await response.json();
+        expect(body.logoLinkUrl).toBe('https://example.com');
+      });
+    });
+
+    it('omits logoLinkUrl when LOGO_LINK_URL is unset', async () => {
+      vi.stubEnv('LOGO_LINK_URL', undefined);
+      await withServer(async (baseUrl) => {
+        const response = await fetch(`${baseUrl}/api/locations`);
+        const body = await response.json();
+        expect(body.logoLinkUrl).toBeUndefined();
+      });
+    });
+
+    it('omits logoLinkUrl when LOGO_LINK_URL is whitespace only', async () => {
+      vi.stubEnv('LOGO_LINK_URL', '   ');
+      await withServer(async (baseUrl) => {
+        const response = await fetch(`${baseUrl}/api/locations`);
+        const body = await response.json();
+        expect(body.logoLinkUrl).toBeUndefined();
+      });
+    });
+
+    it('trims surrounding whitespace from LOGO_LINK_URL', async () => {
+      vi.stubEnv('LOGO_LINK_URL', '  https://example.com  ');
+      await withServer(async (baseUrl) => {
+        const response = await fetch(`${baseUrl}/api/locations`);
+        const body = await response.json();
+        expect(body.logoLinkUrl).toBe('https://example.com');
+      });
+    });
+  });
 });
 
 describe('GET /api/locations/nearest', () => {

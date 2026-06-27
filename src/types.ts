@@ -29,6 +29,7 @@ export interface StopDepartures {
 export interface LocationsResponse {
   locations: Location[];
   refreshInterval: number;
+  logoLinkUrl?: string;
 }
 
 export interface LocationDepartures {

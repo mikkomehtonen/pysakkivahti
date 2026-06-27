@@ -12,6 +12,7 @@ interface AppState {
   error: string | null;
   lastUpdated: Date | null;
   refreshInterval: number;
+  logoLinkUrl: string;
 }
 
 export class App {
@@ -38,6 +39,7 @@ export class App {
       error: null,
       lastUpdated: null,
       refreshInterval: 30,
+      logoLinkUrl: '',
     };
   }
 
@@ -49,6 +51,8 @@ export class App {
       const locationsResponse = await fetchLocations();
       this.state.locations = locationsResponse.locations;
       this.state.refreshInterval = locationsResponse.refreshInterval;
+      this.state.logoLinkUrl = locationsResponse.logoLinkUrl ?? '';
+      this.applyLogoLink();
 
       const detected = await detectLocation();
       this.state.gpsLocationId = detected?.id ?? null;
@@ -135,6 +139,8 @@ export class App {
       const locationsResponse = await fetchLocations();
       this.state.locations = locationsResponse.locations;
       this.state.refreshInterval = locationsResponse.refreshInterval;
+      this.state.logoLinkUrl = locationsResponse.logoLinkUrl ?? '';
+      this.applyLogoLink();
 
       const selected = this.state.locations[0] ?? null;
       this.state.selectedLocation = selected;
@@ -192,6 +198,26 @@ export class App {
     main.append(locationHeader, departures, status, buttons);
 
     this.container.append(appHeader, main);
+  }
+
+  private applyLogoLink(): void {
+    const header = this.container.querySelector('.app-header');
+    if (!header) return;
+    const logo = header.querySelector('img.app-logo');
+    if (!logo) return;
+    const url = this.state.logoLinkUrl.trim();
+    if (!url) return;
+    const parent = logo.parentElement;
+    if (parent instanceof HTMLAnchorElement && parent.classList.contains('app-logo-link')) {
+      parent.href = url;
+      return;
+    }
+    const link = document.createElement('a');
+    link.className = 'app-logo-link';
+    link.href = url;
+    link.setAttribute('aria-label', 'Pysäkkivahti');
+    logo.replaceWith(link);
+    link.appendChild(logo);
   }
 
   private render(): void {

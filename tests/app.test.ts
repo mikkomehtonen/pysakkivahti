@@ -185,6 +185,58 @@ describe('App', () => {
     expect(logoIndex).toBeLessThan(titleIndex);
   });
 
+  it('wraps the logo in a link when logoLinkUrl is provided', async () => {
+    const locations = { ...defaultLocations, logoLinkUrl: 'https://example.com' };
+    mockFetchResponses(locations, { home: homeDepartures });
+    const container = createContainer();
+    const app = createApp(container);
+    await app.mount();
+
+    const header = container.querySelector('header.app-header');
+    expect(header).toBeTruthy();
+
+    const link = header?.querySelector('a.app-logo-link');
+    expect(link).toBeTruthy();
+    expect(link?.getAttribute('href')).toBe('https://example.com');
+    expect(link?.getAttribute('aria-label')).toBe('Pysäkkivahti');
+    expect(link?.hasAttribute('target')).toBe(false);
+
+    const logo = link?.querySelector('img.app-logo');
+    expect(logo).toBeTruthy();
+    expect(logo?.getAttribute('src')).toBe('/favicon.svg');
+    expect(logo?.getAttribute('alt')).toBe('');
+
+    const headerChildren = Array.from(header!.children);
+    expect(headerChildren[0]).toBe(link);
+  });
+
+  it('keeps the logo as a plain image when logoLinkUrl is absent', async () => {
+    mockFetchResponses(defaultLocations, { home: homeDepartures });
+    const container = createContainer();
+    const app = createApp(container);
+    await app.mount();
+
+    const header = container.querySelector('header.app-header');
+    expect(header?.querySelector('a.app-logo-link')).toBeFalsy();
+
+    const logo = header?.querySelector('img.app-logo');
+    expect(logo?.parentElement).toBe(header);
+  });
+
+  it('keeps the logo as a plain image when logoLinkUrl is empty', async () => {
+    const locations = { ...defaultLocations, logoLinkUrl: '' };
+    mockFetchResponses(locations, { home: homeDepartures });
+    const container = createContainer();
+    const app = createApp(container);
+    await app.mount();
+
+    const header = container.querySelector('header.app-header');
+    expect(header?.querySelector('a.app-logo-link')).toBeFalsy();
+
+    const logo = header?.querySelector('img.app-logo');
+    expect(logo?.parentElement).toBe(header);
+  });
+
   it('renders when no locations are available', async () => {
     globalThis.fetch = vi.fn((input: string | Request | URL) => {
       const url = typeof input === 'string' ? input : input.toString();
@@ -365,6 +417,31 @@ describe('App', () => {
           ok: true,
           status: 200,
           json: () => Promise.resolve({ locations: 'not-an-array' }),
+        } as Response);
+      }
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({ error: 'Not found' }),
+      } as Response);
+    }) as typeof fetch;
+
+    const container = createContainer();
+    const app = createApp(container);
+    await app.mount();
+
+    expect(container.querySelector('.error')).toBeTruthy();
+    expect(container.querySelector('.error')?.textContent).toContain('Sijaintien hakeminen epäonnistui');
+  });
+
+  it('shows error when logoLinkUrl is not a string', async () => {
+    globalThis.fetch = vi.fn((input: string | Request | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url === '/api/locations') {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ locations: [], refreshInterval: 30, logoLinkUrl: 123 }),
         } as Response);
       }
       return Promise.resolve({
@@ -947,6 +1024,18 @@ describe('style.css', () => {
     expect(heightMatch).toBeTruthy();
     expect(widthMatch![1]).toBe(heightMatch![1]);
     expect(logoRule![1]).toMatch(/flex-shrink\s*:\s*0/s);
+  });
+
+  it('styles the logo link wrapper and adds a focus ring', () => {
+    const linkRule = cssText.match(/\.app-logo-link\s*\{([^}]*)\}/s);
+    expect(linkRule).toBeTruthy();
+    expect(linkRule![1]).toMatch(/display\s*:\s*inline-flex/s);
+    expect(linkRule![1]).toMatch(/flex-shrink\s*:\s*0/s);
+    expect(linkRule![1]).toMatch(/text-decoration\s*:\s*none/s);
+
+    const focusRule = cssText.match(/\.app-logo-link:focus-visible\s*\{([^}]*)\}/s);
+    expect(focusRule).toBeTruthy();
+    expect(focusRule![1]).toMatch(/outline/s);
   });
 
   it('defines the brand accent and a 4px spacing scale', () => {
